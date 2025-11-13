@@ -39,12 +39,12 @@
 		],
 		"supportURL": "https://github.com/dhowe/adnauseam/issues"
 	},
-	"eff-dnt-whitelist": {
+	"eff-dnt-allowlist": {
 		"content": "filters",
 		"group": "default",
 		"hidden": true,
-		"title": "DNT Policy Whitelist",
-		"tags": "whitelist",
+		"title": "DNT Policy Allowlist",
+		"tags": "allowlist",
 		"contentURL": [
 			"https://www.eff.org/files/effdntlist.txt",
 			"assets/thirdparties/www.eff.org/files/effdntlist.txt"

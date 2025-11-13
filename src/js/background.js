@@ -206,10 +206,10 @@ const µBlock = {  // jshint ignore:line
     canFilterResponseData: typeof browser.webRequest.filterResponseData === 'function',
 
     // https://github.com/chrisaljoudi/uBlock/issues/180
-    // Whitelist directives need to be loaded once the PSL is available
-    netWhitelist: new Map(),
-    netWhitelistModifyTime: 0,
-    netWhitelistDefault: [
+    // Allowlist directives need to be loaded once the PSL is available
+    netAllowlist: new Map(),
+    netAllowlistModifyTime: 0,
+    netAllowlistDefault: [
         'chrome-extension-scheme',
         'moz-extension-scheme',
     ],

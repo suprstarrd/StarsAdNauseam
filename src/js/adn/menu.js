@@ -453,7 +453,7 @@ import { broadcast, onBroadcast } from '../broadcast.js';
     })
   };
 
-  // check if current page/domain is whitelisted
+  // check if current page/domain is allowlisted
   const getIsDisabled = function () {
     return popupData.pageURL === '' || !popupData.netFilteringSwitch ||
       (popupData.pageHostname === 'behind-the-scene' && !popupData.advancedUserEnabled);
@@ -691,7 +691,7 @@ import { broadcast, onBroadcast } from '../broadcast.js';
     let url = new URL(popupData.pageURL)
     // let isDomainHome = url.pathname === '/' || url.pathname === '/index.html' || url.pathname === '/index.php'
     var scope = uDom(".disable_type_radio:checked") ? uDom(".disable_type_radio:checked").val() : ''
-    // first remove previous whichever previous scope from whitelist 
+    // first remove previous whichever previous scope from allowlist 
     vAPI.messaging.send(
       'adnauseam', {
       what: 'toggleEnabled',
