@@ -17,7 +17,6 @@ body:
       label: Testing
       options:
         - label: Release latest release candidate version (vX.X.XbX) on Github. 
-        - label: Add manual update instructions on release version text https://github.com/dhowe/AdNauseam/blob/master/.github/RELEASE_TEMPLATE.md,
         - label: Validade the [full tests](https://github.com/dhowe/AdNauseam/wiki/Testing-New-Release-Candidates)
 
   - type: checkboxes

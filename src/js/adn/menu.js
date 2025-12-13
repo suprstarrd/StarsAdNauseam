@@ -39,6 +39,10 @@ import { broadcast, onBroadcast } from '../broadcast.js';
   var updatedButtonState = '';
   var colorBlindMode = false
 
+  // store values for setCounter
+  var total = 0
+  var clicked = 0
+
   // on adnRefresh event, update initialButtonState to updatedButtonState
   window.addEventListener('adnRefresh', function (e) {
     initialButtonState = updatedButtonState;
@@ -56,7 +60,7 @@ import { broadcast, onBroadcast } from '../broadcast.js';
   }, 10)
 
   onBroadcast(request => {
-
+    
     switch (request.what) {
 
       case 'adAttempt':
@@ -95,6 +99,8 @@ import { broadcast, onBroadcast } from '../broadcast.js';
     page = json && json.pageUrl;
     settings = json && json.prefs;
     recent = json && json.recent
+    total = json && json.total
+    clicked = json && json.clicked
 
     console.log("[ADN] renderPage settings", settings)
 
@@ -114,7 +120,7 @@ import { broadcast, onBroadcast } from '../broadcast.js';
 
     if (typeof json !== 'undefined' && json !== null) {
       ads = json.data;
-      setCounts(ads, json.total, json.recent);
+      setCounts(ads, json.total, json.recent, json.clicked);
     } else {
       console.warn("[ADN] json null, cant make ad list")
     }
@@ -167,11 +173,12 @@ import { broadcast, onBroadcast } from '../broadcast.js';
     });
   }
 
-  const setCounts = function (ads, total, recent) {
-    const numVisits = recent ? 0 : (visitedCount(ads) || 0);
-    uDom('#vault-count').text(total || 0);
+  const setCounts = function (_ads, _total, _recent, _clicked) {
+    // console.log("[ADN] setCounts", ads, total, recent)
+    const numVisits = recent ? 0 : (visitedCount(_ads) || 0);
+    uDom('#vault-count').text(`${_clicked || 0} / ${_total || 0}`);
     uDom('#visited').text(i18n$("adnMenuAdsClicked").replace("{{number}}", numVisits || 0));
-    uDom('#found').text(i18n$("adnMenuAdsDetected").replace("{{count}}", (ads && !recent) ? ads.length : 0));
+    uDom('#found').text(i18n$("adnMenuAdsDetected").replace("{{count}}", (ads && !_recent) ? _ads.length : 0));
     setCost(numVisits);
     adjustStatCSS();
   }
@@ -212,6 +219,8 @@ import { broadcast, onBroadcast } from '../broadcast.js';
   const updateAd = function (ad) { // update class, title, counts
     // console.log(ad);
     if (verify(ad)) {
+      clicked += 1
+      setCounts(ads, total, recent, clicked);
 
       const $ad = updateAdClasses(ad);
 

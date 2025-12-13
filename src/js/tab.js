@@ -1109,15 +1109,16 @@ vAPI.tabs = new vAPI.Tabs();
         
         const pageStore = µb.pageStoreFromTabId(tabId);
         let pageDomain = pageStore ? domainFromHostname(pageStore.tabHostname) : null; // ADN;
+
+        count = adnauseam.currentCount(pageStore.rawURL); // ADN
         
         if ( pageStore !== null ) {
             state = pageStore.getNetFilteringSwitch() ? 1 : 0;
             isStrict = pageStore.getIsPageStrictBlocked() ? 1 : 0 // ADN
             if ( state === 1 ) {
                 if ( (parts & 0b0010) !== 0 ) {
-                    const blockCount = pageStore.counts.blocked.any;
-                    if ( blockCount !== 0 ) {
-                        badge = µb.formatCount(blockCount);
+                    if ( count !== 0 ) {
+                        badge = µb.formatCount(count);
                     }
                 }
                 if ( (parts & 0b0100) !== 0 ) {
@@ -1128,12 +1129,11 @@ vAPI.tabs = new vAPI.Tabs();
             }
 
           state = adnauseam.getIconState(state, pageDomain, isClick, isStrict); // ADN
-          count = adnauseam.currentCount(pageStore.rawURL); // ADN
           badge = µb.formatCount(count);
         }
 
         // https://www.reddit.com/r/uBlockOrigin/comments/d33d37/
-        if ( µb.userSettings.showIconBadge === false ) {
+        if ( µb.userSettings.showIconBadge === false || count === 0 ) {
             parts |= 0b1000;
         }
 
