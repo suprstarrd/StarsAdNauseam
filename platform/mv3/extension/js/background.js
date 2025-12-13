@@ -19,6 +19,8 @@
     Home: https://github.com/gorhill/uBlock
 */
 
+import * as scrmgr from './scripting-manager.js';
+
 import {
     MODE_BASIC,
     MODE_OPTIMAL,
@@ -26,6 +28,7 @@ import {
     getDefaultFilteringMode,
     getFilteringMode,
     getFilteringModeDetails,
+    persistHostPermissions,
     setDefaultFilteringMode,
     setFilteringMode,
     setFilteringModeDetails,
@@ -62,6 +65,7 @@ import {
     browser,
     localRead, localRemove, localWrite,
     runtime,
+    sessionAccessLevel,
     webextFlavor,
 } from './ext.js';
 
@@ -111,8 +115,8 @@ import { loadAdNauseamFilters } from './adn/filters.js';
 /******************************************************************************/
 
 const UBOL_ORIGIN = runtime.getURL('').replace(/\/$/, '').toLowerCase();
-
 const canShowBlockedCount = typeof dnr.setExtensionActionOptions === 'function';
+const { registerInjectables } = scrmgr;
 
 let pendingPermissionRequest;
 
@@ -139,6 +143,7 @@ async function reloadTab(tabId, url = '') {
 
 // When a new host permission is granted through the popup panel
 async function onPermissionGrantedThruExtension(details, origins) {
+    await persistHostPermissions();
     const defaultMode = await getDefaultFilteringMode();
     if ( defaultMode >= MODE_OPTIMAL ) { return; }
     if ( Array.isArray(origins) === false ) { return; }
@@ -166,8 +171,7 @@ async function onPermissionGrantedThruBrowser(origins) {
     const results = await browser.scripting.executeScript({
         target: { tabId, frameIds: [ 0 ] },
         func: ( ) => document.location.hostname,
-    }).catch(reason => {
-        ubolErr(`executeScript/${reason}`);
+    }).catch(( ) => {
     });
     const tabHostname = results?.[0]?.result;
     if ( typeof tabHostname !== 'string' ) { return; }
@@ -229,7 +233,7 @@ function onMessage(request, sender, callback) {
 
     switch ( request.what ) {
 
-    case 'insertCSS': {
+    case 'insertCSS':
         if ( frameId === false ) { return false; }
         // https://bugs.webkit.org/show_bug.cgi?id=262491
         if ( frameId !== 0 && webextFlavor === 'safari' ) { return false; }
@@ -241,10 +245,11 @@ function onMessage(request, sender, callback) {
             ubolErr(`insertCSS/${reason}`);
         });
         return false;
-    }
 
-    case 'removeCSS': {
+    case 'removeCSS':
         if ( frameId === false ) { return false; }
+        // https://bugs.webkit.org/show_bug.cgi?id=262491
+        if ( frameId !== 0 && webextFlavor === 'safari' ) { return false; }
         browser.scripting.removeCSS({
             css: request.css,
             origin: 'USER',
@@ -253,7 +258,6 @@ function onMessage(request, sender, callback) {
             ubolErr(`removeCSS/${reason}`);
         });
         return false;
-    }
 
     case 'toggleToolbarIcon': {
         if ( tabId ) {
@@ -714,6 +718,10 @@ async function startSession() {
     // launch time whether content css/scripts are properly registered.
     registerInjectables();
 
+    // Cosmetic filtering-related content scripts cache fitlering data in
+    // session storage.
+    sessionAccessLevel({ accessLevel: 'TRUSTED_AND_UNTRUSTED_CONTEXTS' });
+
     // https://developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensions/API/declarativeNetRequest
     //   Firefox API does not support `dnr.setExtensionActionOptions`
     if ( canShowBlockedCount ) {
@@ -753,6 +761,8 @@ async function start() {
 
     if ( process.wakeupRun === false ) {
         await startSession();
+    } else {
+        scrmgr.onWakeupRun();
     }
 
     toggleDeveloperMode(rulesetConfig.developerMode);

@@ -1,6 +1,6 @@
 /*******************************************************************************
 
-    AdNauseam Lite - a comprehensive, MV3-compliant content blocker
+    uBlock Origin - a browser extension to block requests.
     Copyright (C) 2019-present Raymond Hill
 
     This program is free software: you can redistribute it and/or modify
@@ -19,24 +19,14 @@
     Home: https://github.com/gorhill/uBlock
 */
 
-// Important!
-// Isolate from global scope
-(async function uBOL_cssSpecific() {
-
-/******************************************************************************/
-
-const specificImports = self.specificImports || [];
-self.specificImports = undefined;
-
-/******************************************************************************/
-
-const selectors = await self.cosmeticAPI.getSelectors('specific', specificImports);
-self.cosmeticAPI.release();
-if ( selectors.length === 0 ) { return; }
-self.cssAPI.insert(`${selectors.join(',\n')}{display:none!important;}`);
-
-/******************************************************************************/
-
+(function() {
+    if ( window.nitroAds ) { return; }
+    const noopfn = function() {
+        ;
+    }.bind();
+    const nitroAds = {
+        createAd: noopfn,
+        queue: [],
+    };
+    window.nitroAds = nitroAds;
 })();
-
-void 0;

@@ -21,7 +21,7 @@
 
 // Important!
 // Isolate from global scope
-(function uBOL_cssProcedural() {
+(async function uBOL_cssProcedural() {
 
 /******************************************************************************/
 
@@ -30,44 +30,13 @@ self.proceduralImports = undefined;
 
 /******************************************************************************/
 
-const selectors = [];
-const exceptions = [];
-
-const lookupHostname = (hostname, details, out) => {
-    let seqi = details.hostnamesMap.get(hostname);
-    if ( seqi === undefined ) { return; }
-    const { argsList, argsSeqs } = details;
-    for (;;) {
-        const argi = argsSeqs[seqi++];
-        const done = argi > 0;
-        out.push(...JSON.parse(argsList[done ? argi : -argi]));
-        if ( done ) { break; }
-    }
-};
-
-const lookupAll = hostname => {
-    for ( const details of proceduralImports ) {
-        lookupHostname(hostname, details, selectors);
-        const matches = [];
-        lookupHostname(`~${hostname}`, details, matches);
-        if ( matches.length === 0 ) { continue; }
-        exceptions.push(...matches.map(a => JSON.stringify(a)));
-    }
-};
-
-self.isolatedAPI.forEachHostname(lookupAll, {
-    hasEntities: proceduralImports.some(a => a.hasEntities)
-});
-proceduralImports.length = 0;
-
+const selectors = await self.cosmeticAPI.getSelectors('procedural', proceduralImports);
+self.cosmeticAPI.release();
 if ( selectors.length === 0 ) { return; }
 
-const exceptedSelectors = exceptions.length !== 0
-    ? selectors.filter(a => exceptions.includes(JSON.stringify(a)) === false)
-    : selectors;
-if ( exceptedSelectors.length === 0 ) { return; }
+proceduralImports.length = 0;
 
-const declaratives = exceptedSelectors.filter(a => a.cssable);
+const declaratives = selectors.filter(a => a.cssable);
 if ( declaratives.length !== 0 ) {
     const cssRuleFromProcedural = details => {
         const { tasks, action } = details;
@@ -107,7 +76,7 @@ if ( declaratives.length !== 0 ) {
     }
 }
 
-const procedurals = exceptedSelectors.filter(a => a.cssable === undefined);
+const procedurals = selectors.filter(a => a.cssable === undefined);
 if ( procedurals.length !== 0 ) {
     const addSelectors = selectors => {
         if ( self.listsProceduralFiltererAPI instanceof Object === false ) { return; }
