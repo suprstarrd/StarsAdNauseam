@@ -69,12 +69,15 @@ const hiddenSettingsDefault = {
     disableWebAssembly: false,
     dnsCacheTTL: 600,
     dnsResolveEnabled: true,
-    extensionUpdateForceReload: false,
+    extensionUpdateForceReload: true,
     filterAuthorMode: false,
     loggerPopupType: 'popup',
-    manualUpdateAssetFetchPeriod: 500,
+    manualUpdateAssetFetchPeriod: 1,
     modifyWebextFlavor: 'unset',
     noScriptingCSP: 'script-src http: https:',
+    nanoIgnoreThirdPartyWhitelist: false,
+    nanoMakeThirdPartyFiltersPrivileged: false,
+    nanoMakeUserFiltersPrivileged: false,
     popupFontSize: 'unset',
     popupPanelDisabledSections: 0,
     popupPanelHeightMode: 0,
@@ -163,9 +166,11 @@ if (vAPI.webextFlavor.soup.has('devbuild')) {
 
 /* Adn https://github.com/dhowe/AdNauseam/issues/2040 */
 
-const allowAnyBlockOnDomains = ['youtube.com', 'funnyordie.com']; // no dnt in here
+const allowAnyBlockOnDomains = ['youtube.com', 'gmail.com', 'funnyordie.com', 'facebook.com']; // no dnt in here
 const strictBlockDefault = allowAnyBlockOnDomains.map(d => d + ' * * strictBlock');
 const dynamicFilteringDefault = [
+    'no-csp-reports: * true',
+    'no-csp-reports: fake-domain.noscript.net false',
     'behind-the-scene * * noop',
     'behind-the-scene * image noop',
     'behind-the-scene * 3p noop',
@@ -276,6 +281,7 @@ const µBlock = {  // jshint ignore:line
     */
     assetsJsonPath: '/assets/assets.json', // Adn
     userFiltersPath: 'user-filters',
+    nanoPartialUserFiltersPath: 'nano-partial-user-filters',
     pslAssetKey: 'public_suffix_list.dat',
 
     selectedFilterLists: [],
