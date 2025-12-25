@@ -594,7 +594,7 @@
 	"legitimate-url-shortener": {
 		"content": "filters",
 		"group": "annoyances",
-		"off": true,
+		"off": false,
 		"title": "➗ Actually Legitimate URL Shortener Tool",
 		"tags": "annoyances",
 		"contentURL": "https://raw.githubusercontent.com/DandelionSprout/adfilt/refs/heads/master/LegitimateURLShortener.txt",
@@ -607,7 +607,7 @@
 	"legitimate-url-shortener-affiliate": {
 		"content": "filters",
 		"group": "annoyances",
-		"off": true,
+		"off": false,
 		"title": "➗ Actually Legitimate URL Shortener Tool - Affiliate tag allowlist",
 		"tags": "annoyances",
 		"contentURL": "https://raw.githubusercontent.com/DandelionSprout/adfilt/refs/heads/master/LegitimateURLShortener-AffiliateTagAllowlist.txt",
