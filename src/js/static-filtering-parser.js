@@ -2973,7 +2973,7 @@ export class AstFilterParser {
             const indent = '  '.repeat(walker.depth);
             console.log(`${indent}type=${name} "${value}" 0b${bits}`);
             if ( this.isNodeTransformed(node) ) {
-                console.log(`${indent}    transform="${this.getNodeTransform(node)}`);
+                console.log(`${indent}    transform="${this.getNodeTransform(node)}"`);
             }
         }
     }

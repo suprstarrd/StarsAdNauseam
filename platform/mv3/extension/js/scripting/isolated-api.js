@@ -43,6 +43,8 @@
         }).filter(a => a !== undefined);
     })();
 
+    isolatedAPI.topHostname = hostnameStack.at(-1)?.hnparts.join('.') ?? '';
+
     const forEachHostname = (entry, callback, details) => {
         const hnparts = entry.hnparts;
         const hnpartslen = hnparts.length;
@@ -81,6 +83,9 @@
     if ( typeof api === 'object' ) { return; }
 
     const cosmeticAPI = self.cosmeticAPI = {};
+    const { isolatedAPI } = self;
+    const { topHostname } = isolatedAPI;
+    const thisHostname = document.location.hostname || '';
 
     const sessionRead = async function(key) {
         try {
@@ -126,10 +131,7 @@
         return -1;
     };
 
-    const lookupHostname = (hostname, data) => {
-        const listref = binarySearch(data.hostnames, hostname);
-        if ( listref === -1 ) { return; }
-        const ilist = data.selectorListRefs[listref];
+    const selectorsFromListIndex = (data, ilist) => {
         const list = JSON.parse(`[${data.selectorLists[ilist]}]`);
         const { result } = data;
         for ( const iselector of list ) {
@@ -141,22 +143,48 @@
         }
     };
 
+    const lookupHostname = (hostname, data) => {
+        const listref = binarySearch(data.hostnames, hostname);
+        if ( listref !== -1 ) {
+            selectorsFromListIndex(data, data.selectorListRefs[listref]);
+        }
+        const { fromRegexes } = data;
+        for ( let i = 0, n = fromRegexes.length; i < n; i += 2 ) {
+            if ( typeof fromRegexes[i+0] === 'string' ) {
+                fromRegexes[i+0] = new RegExp(fromRegexes[i+0]);
+            }
+            if ( fromRegexes[i+0].test(hostname) === false ) { continue; }
+            selectorsFromListIndex(data, fromRegexes[i+1]);
+        }
+    };
+
     const selectorsFromRuleset = async (realm, rulesetId, result) => {
         const data = await localRead(`css.${realm}.${rulesetId}`);
         if ( typeof data !== 'object' || data === null ) { return; }
         data.result = result;
-        self.isolatedAPI.forEachHostname(lookupHostname, data);
+        isolatedAPI.forEachHostname(lookupHostname, data);
     };
 
     const fillCache = async function(realm, rulesetIds) {
         const selectors = new Set();
         const exceptions = new Set();
         const result = { selectors, exceptions };
-        await Promise.all(rulesetIds.map(a => selectorsFromRuleset(realm, a, result)));
+        const [ filteringModeDetails ] = await Promise.all([
+            localRead('filteringModeDetails'),
+            ...rulesetIds.map(a => selectorsFromRuleset(realm, a, result)),
+        ]);
+        const skip = filteringModeDetails?.none.some(a => {
+            if ( topHostname.endsWith(a) === false ) { return false; }
+            const n = a.length;
+            return topHostname.length === n || topHostname.at(-n-1) === '.';
+        });
         for ( const selector of exceptions ) {
             selectors.delete(selector);
         }
-        cacheEntry[cacheSlots[realm]] = Array.from(selectors).map(a =>
+        if ( skip ) {
+            selectors.clear();
+        }
+        cacheEntry[realm.charAt(0)] = Array.from(selectors).map(a =>
             a.startsWith('{') ? JSON.parse(a) : a
         );
     };
@@ -165,14 +193,14 @@
         cacheEntry = await sessionRead(cacheKey) || {};
     };
 
-    const cacheSlots = { 'specific': 's', 'procedural': 'p' };
-    const cacheKey = `cache.css.${document.location.hostname || ''}`;
+    const cacheKey =
+        `cache.css.${thisHostname || ''}${topHostname !== thisHostname ? `/${topHostname}` : ''}`;
     let clientCount = 0;
     let cacheEntry;
 
     cosmeticAPI.getSelectors = async function(realm, rulesetIds) {
         clientCount += 1;
-        const slot = cacheSlots[realm];
+        const slot = realm.charAt(0);
         if ( cacheEntry === undefined ) {
             cacheEntry = readCache();
         }
