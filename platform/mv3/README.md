@@ -9,9 +9,9 @@ The following assumes a linux environment.
 3. `cd uBlock`
 4. `git submodule init`
 5. `git submodule update`
-6. cd platform/mv3/extension/lib/codemirror/codemirror-ubol/
-7. npm install
-8. cd -
+6. `cd platform/mv3/extension/lib/codemirror/codemirror-ubol/`
+7. `npm install`
+8. `cd -`
 9. `make mv3-[platform]`, where `[platform]` is either `chromium`, `edge`, `firefox`, or `safari`
 10. This will fully build uBO Lite, and during the process filter lists will be downloaded from their respective remote servers
 
